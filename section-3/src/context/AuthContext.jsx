@@ -2,15 +2,18 @@
 import React, { createContext, useState, useContext } from 'react';
 import { MOCK_USERS } from '../data/mockData';
 
-// สร้าง Context
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // 1. ตอนโหลดแอป ให้เช็คก่อนว่ามีข้อมูลล็อกอินเก่าจำไว้ในเครื่องไหม
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('task_tracker_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ฟังก์ชันจำลองการ Login (มี Delay 1.5 วินาที)
   const login = async (username) => {
     setIsLoading(true);
     setError(null);
@@ -20,6 +23,8 @@ export const AuthProvider = ({ children }) => {
         const foundUser = MOCK_USERS.find(u => u.username === username);
         if (foundUser) {
           setUser(foundUser);
+          // 2. ถ้าล็อกอินผ่าน ให้จำข้อมูลผู้ใช้ลงใน localStorage
+          localStorage.setItem('task_tracker_user', JSON.stringify(foundUser));
           setIsLoading(false);
           resolve(foundUser);
         } else {
@@ -27,12 +32,14 @@ export const AuthProvider = ({ children }) => {
           setIsLoading(false);
           reject(new Error('User not found'));
         }
-      }, 1500); // หน่วงเวลาจำลอง API 1.5 วินาที
+      }, 1500);
     });
   };
 
   const logout = () => {
     setUser(null);
+    // 3. ตอนล็อกเอาท์ ก็ล้างข้อมูลออกจากเครื่องด้วย
+    localStorage.removeItem('task_tracker_user');
   };
 
   return (
@@ -42,5 +49,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom Hook สำหรับเรียกใช้ AuthContext
 export const useAuth = () => useContext(AuthContext);
