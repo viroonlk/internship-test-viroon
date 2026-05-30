@@ -3,23 +3,20 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, allowedRole }) => {
+export default function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useAuth();
 
-  // 1. ถ้ายังไม่ล็อกอิน ให้เด้งกลับไปหน้า Login (/)
+  // ถ้ายังไม่ได้ Login ให้เด้งกลับไปหน้าแรก (/)
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  // 2. ถ้า Role ไม่ตรงกับที่อนุญาต ให้เด้งไปหน้าอื่น หรือแจ้งเตือน
-  if (user.role !== allowedRole) {
-    alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้!');
-    // เด้งกลับไปหน้าของตัวเอง
+  // ถ้า Login แล้ว แต่ Role ไม่ตรงกับที่อนุญาต
+  if (!allowedRoles.includes(user.role)) {
+    // ให้เด้งกลับไปหน้า Dashboard ของตัวเอง
     return <Navigate to={user.role === 'admin' ? '/admin' : '/employee'} replace />;
   }
 
-  // 3. ถ้าผ่านเงื่อนไขทั้งหมด ให้แสดงผลหน้านั้นได้
+  // ถ้าผ่านเงื่อนไขทั้งหมด ให้แสดง Component นั้นๆ ได้เลย
   return children;
-};
-
-export default ProtectedRoute;
+}
